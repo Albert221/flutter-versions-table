@@ -1,8 +1,8 @@
 package main
 
 import (
-	"fmt"
 	"os"
+	"text/template"
 
 	"github.com/Albert221/flutter-versions-table/githubapi"
 )
@@ -17,7 +17,20 @@ func main() {
 		panic(err)
 	}
 
-	for _, tag := range tags {
-		fmt.Printf("%v\n", tag)
+	tmpl := template.Must(template.ParseFiles("template/table.gohtml"))
+
+	file, err := os.Create("docs/index.html")
+	if err != nil {
+		panic(err)
 	}
+
+	vm := viewmodel{Tags: tags}
+	err = tmpl.Execute(file, vm)
+	if err != nil {
+		panic(err)
+	}
+}
+
+type viewmodel struct {
+	Tags []*githubapi.Tag
 }
