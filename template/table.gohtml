@@ -12,6 +12,8 @@
                 <thead>
                     <tr>
                         <th>Flutter tag</th>
+                        <th>Flutter engine ref</th>
+                        <th>Dart SDK ref</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -23,9 +25,15 @@
                     ">
                         <td>
                             <a href="https://github.com/flutter/flutter/tree/{{.Name}}">
-                                {{.Name}}
+                                <code>{{.Name}}</code>
                             </a>
                         </td>
+                        <td>
+                            <a href="https://github.com/flutter/engine/tree/{{.EngineRef}}">
+                                <code>{{.EngineRef}}</code>
+                            </a>
+                        </td>
+                        <td></td>
                     </tr>
                     {{end}}
                 </tbody>
