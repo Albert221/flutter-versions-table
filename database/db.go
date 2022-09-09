@@ -30,6 +30,11 @@ func Open(csvPath string) (*DB, error) {
 	}, nil
 }
 
+func (d *DB) Exec(sql string) error {
+	_, err := d.db.Exec(sql)
+	return err
+}
+
 func (d *DB) FetchAll() ([]*Row, error) {
 	query := `
 		SELECT
@@ -38,6 +43,7 @@ func (d *DB) FetchAll() ([]*Row, error) {
 			is_prerelease,
 			engine_commit
 		FROM ` + d.csvName + `
+		ORDER BY release_committed_at DESC
 	`
 
 	dbRows, err := d.db.Query(query)
@@ -69,4 +75,23 @@ func (d *DB) FetchAll() ([]*Row, error) {
 	}
 
 	return rows, nil
+}
+
+func (d *DB) Insert(row *Row) error {
+	_, err := d.db.Exec(`
+		INSERT INTO `+d.csvName+`(
+			release_tag,
+			release_committed_at,
+			is_prerelease,
+			engine_commit
+		) VALUES (
+			?, ?, ?, ?
+		)
+	`,
+		row.ReleaseTag,
+		row.ReleaseCommittedAt.Format(time.RFC3339),
+		row.IsPrerelease,
+		row.EngineCommit,
+	)
+	return errors.Wrap(err, "error during inserting row")
 }
