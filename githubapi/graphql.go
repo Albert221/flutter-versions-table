@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/Albert221/flutter-versions-table/utils"
 )
@@ -48,7 +49,6 @@ func (a *GithubAPI) GetFlutterTags() ([]*Tag, error) {
 	// Limit to 10 tags to avoid hitting the rate limit with fetching files
 	query := `{
   repository(name: "flutter", owner: "flutter") {
-    createdAt
     refs(
       refPrefix: "refs/tags/"
       orderBy: {field: TAG_COMMIT_DATE, direction: DESC}
@@ -57,6 +57,11 @@ func (a *GithubAPI) GetFlutterTags() ([]*Tag, error) {
       edges {
         node {
           name
+		  target {
+			... on Commit {
+				commitedDate
+			}
+		  }
         }
       }
     }
@@ -65,7 +70,10 @@ func (a *GithubAPI) GetFlutterTags() ([]*Tag, error) {
 
 	type edge struct {
 		Node struct {
-			Name string `json:"name"`
+			Name   string `json:"name"`
+			Target struct {
+				CommittedDate time.Time `json:"committedDate"`
+			} `json:"target"`
 		} `json:"node"`
 	}
 	type response struct {
@@ -84,11 +92,13 @@ func (a *GithubAPI) GetFlutterTags() ([]*Tag, error) {
 	}
 
 	tags := utils.MapSlice(r.Data.Repository.Refs.Edges, func(edge edge) *Tag {
-		name := edge.Node.Name
+		node := edge.Node
+		name := node.Name
 		return &Tag{
 			Name: name,
 			// https://semver.org/#spec-item-9
-			IsPrerelease: strings.Contains(name, "-"),
+			IsPrerelease:  strings.Contains(name, "-"),
+			CommittedDate: node.Target.CommittedDate,
 		}
 	})
 
