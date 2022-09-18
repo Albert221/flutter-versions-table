@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/Albert221/flutter-versions-table/utils"
+	"github.com/pkg/errors"
 )
 
 const githubGQLAPIURL = "https://api.github.com/graphql"
@@ -23,23 +24,26 @@ func (a *GithubAPI) gqlQuery(query string, vars map[string]any, response any) er
 
 	reqBuf := new(bytes.Buffer)
 	err := json.NewEncoder(reqBuf).Encode(requestBody)
+	if err != nil {
+		return errors.Wrap(err, "error encoding request body")
+	}
 
 	req, err := http.NewRequest(http.MethodPost, githubGQLAPIURL, reqBuf)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "error creating request")
 	}
 	req.Header.Set("Authorization", "bearer "+a.token)
 	req.Header.Add("Content-Type", "application/json")
 
 	resp, err := a.c.Do(req)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "error sending request")
 	}
 
 	defer resp.Body.Close()
 	err = json.NewDecoder(resp.Body).Decode(&response)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "error decoding response")
 	}
 
 	return nil
