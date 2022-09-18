@@ -29,14 +29,18 @@
                             </a>
                         </td>
                         <td>
+                            {{if .EngineCommitHash}}
                             <a href="{{.EngineCommitURL}}">
                                 <code>{{.EngineCommitHash}}</code>
                             </a>
+                            {{end}}
                         </td>
                         <td>
+                            {{if .DartSDKCommitHash}}
                             <a href="{{.DartSDKCommitURL}}">
                                 <code>{{.DartSDKCommitHash}}</code>
                             </a>
+                            {{end}}
                         </td>
                     </tr>
                     {{end}}
