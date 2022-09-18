@@ -1,6 +1,8 @@
 package repository
 
 import (
+	"strings"
+
 	"github.com/Albert221/flutter-versions-table/repository/database"
 	"github.com/Albert221/flutter-versions-table/repository/githubapi"
 	"github.com/Albert221/flutter-versions-table/utils"
@@ -40,6 +42,7 @@ func (c *CachingRepository) FetchAll() ([]*FlutterVersion, error) {
 	afterCursor := ""
 outerFor:
 	for {
+
 		var tags []*githubapi.Tag
 		tags, afterCursor, err = c.ghAPI.GetNextFlutterTags(afterCursor)
 		if err != nil {
@@ -60,6 +63,7 @@ outerFor:
 			if err != nil {
 				return nil, errors.Wrap(err, "error fetching file with engine version")
 			}
+			engineRef = strings.Trim(engineRef, " \n\r")
 
 			model := ghAPIModelsToRepositoryModel(tag, engineRef)
 
