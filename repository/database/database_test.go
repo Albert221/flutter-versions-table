@@ -23,7 +23,7 @@ func TestFetchAll(t *testing.T) {
 	assert.Equal(t, "321xyz", rows[0].EngineCommit)
 }
 
-func TestInsert(t *testing.T) {
+func TestInsertAll(t *testing.T) {
 	file := "testdata/insert.csv"
 
 	csvContent := "release_tag,release_committed_at,is_prerelease,engine_commit"
@@ -40,7 +40,7 @@ func TestInsert(t *testing.T) {
 		EngineCommit:       "456ghj",
 	}
 
-	err = db.Insert(row)
+	err = db.InsertAll([]*database.Row{row})
 	assert.NoError(t, err)
 
 	out, err := os.ReadFile(file)

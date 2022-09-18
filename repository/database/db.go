@@ -2,7 +2,9 @@ package database
 
 import (
 	"database/sql"
+	"fmt"
 	"path"
+	"strings"
 	"time"
 
 	"github.com/pkg/errors"
@@ -72,21 +74,34 @@ func (d *DB) FetchAll() ([]*Row, error) {
 	return rows, nil
 }
 
-func (d *DB) Insert(row *Row) error {
-	_, err := d.db.Exec(`
-		INSERT INTO `+d.csvName+`(
+func (d *DB) InsertAll(rows []*Row) error {
+	sep := ", "
+	rowValuesSql := strings.Repeat("(?, ?, ?, ?)"+sep, len(rows))
+	rowValuesSql = strings.TrimRight(rowValuesSql, sep)
+
+	sql := fmt.Sprintf(`
+		INSERT INTO %s (
 			release_tag,
 			release_committed_at,
 			is_prerelease,
 			engine_commit
-		) VALUES (
-			?, ?, ?, ?
-		)
-	`,
-		row.ReleaseTag,
-		row.ReleaseCommittedAt.Format(time.RFC3339),
-		row.IsPrerelease,
-		row.EngineCommit,
+		) VALUES %s
+		`,
+		d.csvName,
+		rowValuesSql,
 	)
+
+	var args []any
+	for _, row := range rows {
+		args = append(
+			args,
+			row.ReleaseTag,
+			row.ReleaseCommittedAt.Format(time.RFC3339),
+			row.IsPrerelease,
+			row.EngineCommit,
+		)
+	}
+
+	_, err := d.db.Exec(sql, args...)
 	return errors.Wrap(err, "error during inserting row")
 }

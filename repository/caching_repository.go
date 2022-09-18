@@ -49,6 +49,7 @@ outerFor:
 			break
 		}
 
+		lastVersionIndex := len(versions)
 		for _, tag := range tags {
 			// If we started overlapping database tags with API ones, break.
 			if latestTag == tag.Name {
@@ -65,7 +66,12 @@ outerFor:
 			versions = append(versions, model)
 		}
 
-		// TODO: Insert API models to database
+		// Insert API models to database
+		rowsToInsert := utils.MapSlice(versions[lastVersionIndex:], repositoryModelToDBModel)
+		err = c.dbRepo.InsertAll(rowsToInsert)
+		if err != nil {
+			return nil, errors.Wrap(err, "error during inserting flutter versions into database")
+		}
 
 		if afterCursor == "" {
 			break
@@ -89,6 +95,15 @@ func dbModelToRepositoryModel(row *database.Row) *FlutterVersion {
 
 		EngineCommitHash: row.EngineCommit,
 		EngineCommitURL:  engineCommitURLPrefix + row.EngineCommit,
+	}
+}
+
+func repositoryModelToDBModel(model *FlutterVersion) *database.Row {
+	return &database.Row{
+		ReleaseTag:         model.TagName,
+		ReleaseCommittedAt: model.CommitedAt,
+		IsPrerelease:       model.IsPrerelease,
+		EngineCommit:       model.EngineCommitHash,
 	}
 }
 
