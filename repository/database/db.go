@@ -41,7 +41,7 @@ func (d *DB) FetchAll() ([]*Row, error) {
 			is_prerelease,
 			engine_commit
 		FROM ` + d.csvName + `
-		ORDER BY release_committed_at DESC
+		ORDER BY release_committed_at ASC
 	`
 
 	dbRows, err := d.db.Query(query)

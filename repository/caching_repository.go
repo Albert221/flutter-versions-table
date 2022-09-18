@@ -44,8 +44,8 @@ func (c *CachingRepository) FetchAll() ([]*FlutterVersion, error) {
 	var afterCursor string
 	if len(versions) > 0 {
 		c.logger.Sub().Info("Found %d versions", len(versions))
-		latestTag = versions[0].TagName
-		afterCursor = versions[0].edgeCursor
+		latest := versions[len(versions)-1]
+		latestTag, afterCursor = latest.TagName, latest.edgeCursor
 	} else {
 		c.logger.Sub().Info("Found no versions")
 	}
