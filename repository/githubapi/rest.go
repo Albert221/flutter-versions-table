@@ -4,6 +4,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"net/http"
+	"net/url"
 
 	"github.com/pkg/errors"
 )
@@ -42,7 +43,9 @@ func (a *GithubAPI) fetchFile(ref, path string) (string, error) {
 		Content string `json:"content"`
 	}
 
-	err := a.restGet("/repos/flutter/flutter/contents/"+path+"?ref="+ref, &response)
+	encodedRef := url.QueryEscape(ref)
+
+	err := a.restGet("/repos/flutter/flutter/contents/"+path+"?ref="+encodedRef, &response)
 	if err != nil {
 		return "", err
 	}
