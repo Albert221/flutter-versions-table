@@ -5,6 +5,7 @@ import (
 	"path"
 	"text/template"
 
+	"github.com/Albert221/flutter-versions-table/log"
 	"github.com/Albert221/flutter-versions-table/repository"
 	"github.com/Albert221/flutter-versions-table/repository/database"
 	"github.com/Albert221/flutter-versions-table/repository/githubapi"
@@ -18,21 +19,26 @@ const (
 )
 
 func main() {
+	logger := log.New()
+
 	token := os.Getenv("GITHUB_TOKEN")
 
+	logger.Info("Opening CSV database")
 	dbRepo, err := database.Open(csvDataFile)
 	if err != nil {
 		panic(err)
 	}
 	ghAPI := githubapi.NewGithubAPI(token)
-	cachingRepo := repository.NewCaching(dbRepo, ghAPI)
+	cachingRepo := repository.NewCaching(dbRepo, ghAPI, logger.Sub())
 
+	logger.Info("Fetching all versions from caching repository")
 	flutterVersions, err := cachingRepo.FetchAll()
 	if err != nil {
 		panic(err)
 	}
 
 	vm := viewModel{Versions: flutterVersions}
+	logger.Info("Rendering view into file %s", tableOutputFile)
 	err = renderView(tableTemplateFile, tableOutputFile, vm)
 	if err != nil {
 		panic(err)
