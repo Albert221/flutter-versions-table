@@ -26,7 +26,7 @@ func TestFetchAll(t *testing.T) {
 func TestInsertAll(t *testing.T) {
 	file := "testdata/insert.csv"
 
-	csvContent := "release_tag,release_committed_at,is_prerelease,engine_commit"
+	csvContent := "edge_cursor,release_tag,release_committed_at,is_prerelease,engine_commit"
 	os.WriteFile(file, []byte(csvContent), os.ModePerm)
 	defer os.Remove(file)
 
@@ -34,6 +34,7 @@ func TestInsertAll(t *testing.T) {
 	assert.NoError(t, err)
 
 	row := &database.Row{
+		EdgeCursor:         "TMAj",
 		ReleaseTag:         "1.0.0",
 		ReleaseCommittedAt: time.Date(2022, 9, 9, 19, 47, 54, 0, time.UTC),
 		IsPrerelease:       false,
@@ -49,5 +50,5 @@ func TestInsertAll(t *testing.T) {
 	}
 
 	newLine := strings.Split(string(out), "\n")[1]
-	assert.Equal(t, "1.0.0,2022-09-09T19:47:54Z,false,456ghj", newLine)
+	assert.Equal(t, "TMAj,1.0.0,2022-09-09T19:47:54Z,false,456ghj", newLine)
 }

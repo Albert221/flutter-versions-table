@@ -64,6 +64,7 @@ func (a *GithubAPI) GetNextFlutterTags(afterCursor string) (tags []*Tag, lastCur
         hasNextPage
       }
       edges {
+		cursor
         node {
           name
 		  target {
@@ -78,7 +79,8 @@ func (a *GithubAPI) GetNextFlutterTags(afterCursor string) (tags []*Tag, lastCur
 }`
 
 	type edge struct {
-		Node struct {
+		Cursor string `json:"cursor"`
+		Node   struct {
 			Name   string `json:"name"`
 			Target struct {
 				CommittedDate time.Time `json:"committedDate"`
@@ -107,7 +109,8 @@ func (a *GithubAPI) GetNextFlutterTags(afterCursor string) (tags []*Tag, lastCur
 		node := edge.Node
 		name := node.Name
 		return &Tag{
-			Name: name,
+			EdgeCursor: edge.Cursor,
+			Name:       name,
 			// https://semver.org/#spec-item-9
 			IsPrerelease:  strings.Contains(name, "-"),
 			CommittedDate: node.Target.CommittedDate,

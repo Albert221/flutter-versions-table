@@ -35,6 +35,7 @@ func Open(csvPath string) (*DB, error) {
 func (d *DB) FetchAll() ([]*Row, error) {
 	query := `
 		SELECT
+			edge_cursor,
 			release_tag,
 			release_committed_at,
 			is_prerelease,
@@ -54,6 +55,7 @@ func (d *DB) FetchAll() ([]*Row, error) {
 		var releaseCommittedAt string
 
 		err := dbRows.Scan(
+			&row.EdgeCursor,
 			&row.ReleaseTag,
 			&releaseCommittedAt,
 			&row.IsPrerelease,
@@ -76,11 +78,12 @@ func (d *DB) FetchAll() ([]*Row, error) {
 
 func (d *DB) InsertAll(rows []*Row) error {
 	sep := ", "
-	rowValuesSql := strings.Repeat("(?, ?, ?, ?)"+sep, len(rows))
+	rowValuesSql := strings.Repeat("(?, ?, ?, ?, ?)"+sep, len(rows))
 	rowValuesSql = strings.TrimRight(rowValuesSql, sep)
 
 	sql := fmt.Sprintf(`
 		INSERT INTO %s (
+			edge_cursor,
 			release_tag,
 			release_committed_at,
 			is_prerelease,
@@ -95,6 +98,7 @@ func (d *DB) InsertAll(rows []*Row) error {
 	for _, row := range rows {
 		args = append(
 			args,
+			row.EdgeCursor,
 			row.ReleaseTag,
 			row.ReleaseCommittedAt.Format(time.RFC3339),
 			row.IsPrerelease,

@@ -108,6 +108,8 @@ const (
 
 func dbModelToRepositoryModel(row *database.Row) *FlutterVersion {
 	return &FlutterVersion{
+		edgeCursor: row.EdgeCursor,
+
 		TagName:      row.ReleaseTag,
 		TagURL:       tagURLPrefix + row.ReleaseTag,
 		IsPrerelease: row.IsPrerelease,
@@ -120,6 +122,8 @@ func dbModelToRepositoryModel(row *database.Row) *FlutterVersion {
 
 func repositoryModelToDBModel(model *FlutterVersion) *database.Row {
 	return &database.Row{
+		EdgeCursor: model.edgeCursor,
+
 		ReleaseTag:         model.TagName,
 		ReleaseCommittedAt: model.CommitedAt,
 		IsPrerelease:       model.IsPrerelease,
@@ -129,6 +133,8 @@ func repositoryModelToDBModel(model *FlutterVersion) *database.Row {
 
 func ghAPIModelsToRepositoryModel(tag *githubapi.Tag, engineRef string) *FlutterVersion {
 	return &FlutterVersion{
+		edgeCursor: tag.EdgeCursor,
+
 		TagName:      tag.Name,
 		TagURL:       tagURLPrefix + tag.Name,
 		IsPrerelease: tag.IsPrerelease,
