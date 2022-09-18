@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/Albert221/flutter-versions-table/database"
+	"github.com/Albert221/flutter-versions-table/repository/database"
 	"github.com/stretchr/testify/assert"
 )
 

@@ -4,7 +4,7 @@ import (
 	"os"
 	"text/template"
 
-	"github.com/Albert221/flutter-versions-table/githubapi"
+	"github.com/Albert221/flutter-versions-table/repository/githubapi"
 	"github.com/Albert221/flutter-versions-table/utils"
 )
 
