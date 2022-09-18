@@ -51,15 +51,18 @@ func (d *DB) FetchAll() ([]*Row, error) {
 
 	rows := []*Row{}
 	for dbRows.Next() {
-		var row Row
-		var releaseCommittedAt string
+		var (
+			row                Row
+			releaseCommittedAt string
+			engineCommit       sql.NullString
+		)
 
 		err := dbRows.Scan(
 			&row.EdgeCursor,
 			&row.ReleaseTag,
 			&releaseCommittedAt,
 			&row.IsPrerelease,
-			&row.EngineCommit,
+			&engineCommit,
 		)
 		if err != nil {
 			return nil, errors.Wrap(err, "error scanning query results")
@@ -68,6 +71,10 @@ func (d *DB) FetchAll() ([]*Row, error) {
 		row.ReleaseCommittedAt, err = time.Parse(time.RFC3339, releaseCommittedAt)
 		if err != nil {
 			return nil, errors.Wrap(err, "error parsing release_committed_at")
+		}
+
+		if engineCommit.Valid {
+			row.EngineCommit = engineCommit.String
 		}
 
 		rows = append(rows, &row)

@@ -55,7 +55,7 @@ func (a *GithubAPI) GetNextFlutterTags(afterCursor string) (tags []*Tag, lastCur
   repository(name: "flutter", owner: "flutter") {
     refs(
       refPrefix: "refs/tags/"
-      orderBy: {field: TAG_COMMIT_DATE, direction: DESC}
+      orderBy: {field: TAG_COMMIT_DATE, direction: ASC}
       first: 10
       after: $afterCursor
     ) {

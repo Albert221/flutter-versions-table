@@ -39,16 +39,18 @@ func (c *CachingRepository) FetchAll() ([]*FlutterVersion, error) {
 	}
 
 	versions = append(versions, utils.MapSlice(dbRows, dbModelToRepositoryModel)...)
+
 	var latestTag string
+	var afterCursor string
 	if len(versions) > 0 {
 		c.logger.Sub().Info("Found %d versions", len(versions))
 		latestTag = versions[0].TagName
+		afterCursor = versions[0].edgeCursor
 	} else {
 		c.logger.Sub().Info("Found no versions")
 	}
 
 	// Read versions from API
-	afterCursor := ""
 outerFor:
 	for {
 		c.logger.Info(`Fetching Flutter tags from GitHubAPI after cursor "%s"`, afterCursor)
@@ -97,6 +99,8 @@ outerFor:
 			break
 		}
 	}
+
+	utils.ReverseSlice(versions)
 
 	return versions, nil
 }
