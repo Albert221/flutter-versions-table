@@ -2,59 +2,68 @@ package main
 
 import (
 	"os"
+	"path"
 	"text/template"
 
-	"github.com/Albert221/flutter-versions-table/githubapi"
-	"github.com/Albert221/flutter-versions-table/utils"
+	"github.com/Albert221/flutter-versions-table/log"
+	"github.com/Albert221/flutter-versions-table/repository"
+	"github.com/Albert221/flutter-versions-table/repository/database"
+	"github.com/Albert221/flutter-versions-table/repository/githubapi"
+	"github.com/pkg/errors"
+)
+
+const (
+	csvDataFile       = "docs/data.csv"
+	tableTemplateFile = "template/table.gohtml"
+	tableOutputFile   = "docs/index.html"
 )
 
 func main() {
+	logger := log.New()
+
 	token := os.Getenv("GITHUB_TOKEN")
 
+	logger.Info("Opening CSV database")
+	dbRepo, err := database.Open(csvDataFile)
+	if err != nil {
+		panic(err)
+	}
 	ghAPI := githubapi.NewGithubAPI(token)
+	cachingRepo := repository.NewCaching(dbRepo, ghAPI, logger.Sub())
 
-	tags, err := ghAPI.GetFlutterTags()
+	logger.Info("Fetching all versions from caching repository")
+	flutterVersions, err := cachingRepo.FetchAll()
 	if err != nil {
 		panic(err)
 	}
 
-	tmpl := template.Must(template.ParseFiles("template/table.gohtml"))
-
-	err = os.MkdirAll("docs", os.ModePerm)
-	if err != nil {
-		panic(err)
-	}
-
-	file, err := os.Create("docs/index.html")
-	if err != nil {
-		panic(err)
-	}
-
-	vm := viewmodel{Tags: utils.MapSlice(tags, func(aTag *githubapi.Tag) tag {
-		engineRef, err := ghAPI.FetchFile(aTag.Name, "bin/internal/engine.version")
-		if err != nil {
-			panic(err)
-		}
-
-		return tag{
-			Name:         aTag.Name,
-			IsPrerelease: aTag.IsPrerelease,
-			EngineRef:    engineRef,
-		}
-	})}
-
-	err = tmpl.Execute(file, vm)
+	vm := viewModel{Versions: flutterVersions}
+	logger.Info("Rendering view into file %s", tableOutputFile)
+	err = renderView(tableTemplateFile, tableOutputFile, vm)
 	if err != nil {
 		panic(err)
 	}
 }
 
-type tag struct {
-	Name         string
-	IsPrerelease bool
-	EngineRef    string
+func renderView(templatePath, outputPath string, viewModel any) error {
+	tmpl := template.Must(template.ParseFiles(templatePath))
+
+	outputDir := path.Dir(outputPath)
+
+	err := os.MkdirAll(outputDir, os.ModePerm)
+	if err != nil {
+		return errors.Wrap(err, "error during creating output file parent directories")
+	}
+
+	file, err := os.Create(outputPath)
+	if err != nil {
+		return errors.Wrap(err, "error during creating output file")
+	}
+
+	err = tmpl.Execute(file, viewModel)
+	return errors.Wrap(err, "error during executing a template")
 }
 
-type viewmodel struct {
-	Tags []tag
+type viewModel struct {
+	Versions []*repository.FlutterVersion
 }
