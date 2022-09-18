@@ -57,6 +57,7 @@ func (a *GithubAPI) GetNextFlutterTags(afterCursor string) (tags []*Tag, lastCur
       refPrefix: "refs/tags/"
       orderBy: {field: TAG_COMMIT_DATE, direction: DESC}
       first: 10
+      after: $afterCursor
     ) {
       pageInfo {
         endCursor

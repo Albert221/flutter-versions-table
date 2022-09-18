@@ -31,7 +31,10 @@ func (c *CachingRepository) FetchAll() ([]*FlutterVersion, error) {
 	}
 
 	versions = append(versions, utils.MapSlice(dbRows, dbModelToRepositoryModel)...)
-	latestTag := versions[0].TagName
+	var latestTag string
+	if len(versions) > 0 {
+		latestTag = versions[0].TagName
+	}
 
 	// Read versions from API
 	afterCursor := ""
@@ -60,6 +63,12 @@ outerFor:
 			model := ghAPIModelsToRepositoryModel(tag, engineRef)
 
 			versions = append(versions, model)
+		}
+
+		// TODO: Insert API models to database
+
+		if afterCursor == "" {
+			break
 		}
 	}
 

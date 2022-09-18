@@ -17,23 +17,27 @@
                     </tr>
                 </thead>
                 <tbody>
-                    {{range .Tags}}
+                    {{range .Versions}}
                     <tr class="
                     {{if .IsPrerelease}}
                         bg-danger bg-opacity-10
                     {{end}}
                     ">
                         <td>
-                            <a href="https://github.com/flutter/flutter/tree/{{.Name}}">
-                                <code>{{.Name}}</code>
+                            <a href="{{.TagURL}}">
+                                <code>{{.TagName}}</code>
                             </a>
                         </td>
                         <td>
-                            <a href="https://github.com/flutter/engine/tree/{{.EngineRef}}">
-                                <code>{{.EngineRef}}</code>
+                            <a href="{{.EngineCommitURL}}">
+                                <code>{{.EngineCommitHash}}</code>
                             </a>
                         </td>
-                        <td></td>
+                        <td>
+                            <a href="{{.DartSDKCommitURL}}">
+                                <code>{{.DartSDKCommitHash}}</code>
+                            </a>
+                        </td>
                     </tr>
                     {{end}}
                 </tbody>
