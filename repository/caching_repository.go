@@ -21,8 +21,6 @@ func NewCaching(dbRepo *database.DB, githubAPI *githubapi.GithubAPI) *CachingRep
 	}
 }
 
-const engineVersionFile = "bin/internal/engine.version"
-
 func (c *CachingRepository) FetchAll() ([]*FlutterVersion, error) {
 	versions := []*FlutterVersion{}
 
@@ -42,7 +40,6 @@ func (c *CachingRepository) FetchAll() ([]*FlutterVersion, error) {
 	afterCursor := ""
 outerFor:
 	for {
-
 		var tags []*githubapi.Tag
 		tags, afterCursor, err = c.ghAPI.GetNextFlutterTags(afterCursor)
 		if err != nil {
@@ -59,7 +56,7 @@ outerFor:
 				break outerFor
 			}
 
-			engineRef, err := c.ghAPI.FetchFile(tag.Name, engineVersionFile)
+			engineRef, err := c.ghAPI.FetchEngineCommit(tag.Name)
 			if err != nil {
 				return nil, errors.Wrap(err, "error fetching file with engine version")
 			}
