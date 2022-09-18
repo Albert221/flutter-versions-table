@@ -12,10 +12,14 @@ import (
 
 const githubGQLAPIURL = "https://api.github.com/graphql"
 
-func (a *GithubAPI) gqlQuery(query string, response any) error {
+func (a *GithubAPI) gqlQuery(query string, vars map[string]any, response any) error {
 	requestBody := struct {
-		Query string `json:"query"`
-	}{Query: query}
+		Query     string         `json:"query"`
+		Variables map[string]any `json:"variables"`
+	}{
+		Query:     query,
+		Variables: vars,
+	}
 
 	reqBuf := new(bytes.Buffer)
 	err := json.NewEncoder(reqBuf).Encode(requestBody)
@@ -45,21 +49,25 @@ type gqlQueryResponse[T any] struct {
 	Data T `json:"data"`
 }
 
-func (a *GithubAPI) GetFlutterTags() ([]*Tag, error) {
+func (a *GithubAPI) GetNextFlutterTags(afterCursor string) (tags []*Tag, lastCursor string, err error) {
 	// Limit to 10 tags to avoid hitting the rate limit with fetching files
-	query := `{
+	query := `query($afterCursor: String) {
   repository(name: "flutter", owner: "flutter") {
     refs(
       refPrefix: "refs/tags/"
       orderBy: {field: TAG_COMMIT_DATE, direction: DESC}
       first: 10
     ) {
+      pageInfo {
+        endCursor
+        hasNextPage
+      }
       edges {
         node {
           name
 		  target {
 			... on Commit {
-				commitedDate
+				committedDate
 			}
 		  }
         }
@@ -79,19 +87,22 @@ func (a *GithubAPI) GetFlutterTags() ([]*Tag, error) {
 	type response struct {
 		Repository struct {
 			Refs struct {
-				TotalCount int    `json:"totalCount"`
-				Edges      []edge `json:"edges"`
+				PageInfo struct {
+					EndCursor   string `json:"endCursor"`
+					HasNextPage bool   `json:"hasNextPage"`
+				} `json:"pageInfo"`
+				Edges []edge `json:"edges"`
 			} `json:"refs"`
 		} `json:"repository"`
 	}
 
 	var r gqlQueryResponse[response]
-	err := a.gqlQuery(query, &r)
+	err = a.gqlQuery(query, map[string]any{"afterCursor": afterCursor}, &r)
 	if err != nil {
-		return nil, err
+		return nil, "", err
 	}
 
-	tags := utils.MapSlice(r.Data.Repository.Refs.Edges, func(edge edge) *Tag {
+	tags = utils.MapSlice(r.Data.Repository.Refs.Edges, func(edge edge) *Tag {
 		node := edge.Node
 		name := node.Name
 		return &Tag{
@@ -102,5 +113,11 @@ func (a *GithubAPI) GetFlutterTags() ([]*Tag, error) {
 		}
 	})
 
-	return tags, nil
+	var nextCursor string
+	pageInfo := r.Data.Repository.Refs.PageInfo
+	if pageInfo.HasNextPage {
+		nextCursor = pageInfo.EndCursor
+	}
+
+	return tags, nextCursor, nil
 }

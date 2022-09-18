@@ -13,7 +13,7 @@ func main() {
 
 	ghAPI := githubapi.NewGithubAPI(token)
 
-	tags, err := ghAPI.GetFlutterTags()
+	tags, _, err := ghAPI.GetNextFlutterTags("")
 	if err != nil {
 		panic(err)
 	}

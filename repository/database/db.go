@@ -30,11 +30,6 @@ func Open(csvPath string) (*DB, error) {
 	}, nil
 }
 
-func (d *DB) Exec(sql string) error {
-	_, err := d.db.Exec(sql)
-	return err
-}
-
 func (d *DB) FetchAll() ([]*Row, error) {
 	query := `
 		SELECT
