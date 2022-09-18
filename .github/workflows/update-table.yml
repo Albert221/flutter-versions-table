@@ -1,6 +1,7 @@
 name: Update table
 on:
   push:
+    branches: [main]
   schedule:
     - cron: '0 0,12 * * *'
 
